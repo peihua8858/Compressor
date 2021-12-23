@@ -16,7 +16,7 @@ class DefaultConstraint(
         private val width: Int = 612,
         private val height: Int = 816,
         private val format: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
-        private val quality: Int = 80
+        private val quality: Int = 75
 ) : Constraint {
     private var isResolved = false
 
@@ -39,7 +39,7 @@ fun Compression.default(
         width: Int = 612,
         height: Int = 816,
         format: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
-        quality: Int = 80
+        quality: Int = 75
 ) {
     constraint(DefaultConstraint(width, height, format, quality))
 }

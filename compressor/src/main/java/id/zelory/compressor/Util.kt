@@ -4,9 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
 
 /**
  * Created on : January 24, 2020
@@ -15,8 +16,27 @@ import java.io.FileOutputStream
  * GitHub     : https://github.com/zetbaitsu
  */
 private val separator = File.separator
+fun cachePath(context: Context) = cachePath1(context)
+private fun cachePath1(context: Context): String {
+    val cachePath = context.externalCacheDir
+    return "${if (cachePath != null) cachePath.absolutePath else context.cacheDir.absolutePath}${separator}Pictures$separator"
+}
 
-private fun cachePath(context: Context) = "${context.cacheDir.path}${separator}compressor$separator"
+private val sf = SimpleDateFormat("yyyyMMdd_HHmmssSS")
+
+/**
+ * 根据时间戳创建文件名
+ *
+ * @return
+ */
+fun String.createFileName(extension: String): String {
+    val millis = System.currentTimeMillis()
+    return this + sf.format(millis) + "." + extension
+}
+
+fun createFile(context: Context): File {
+    return File(cachePath(context), "IMG_".createFileName("jpg"))
+}
 
 fun File.compressFormat() = when (extension.toLowerCase()) {
     "png" -> Bitmap.CompressFormat.PNG
@@ -71,9 +91,9 @@ fun determineImageRotation(imageFile: File, bitmap: Bitmap): Bitmap {
     val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0)
     val matrix = Matrix()
     when (orientation) {
-        6 -> matrix.postRotate(90f)
-        3 -> matrix.postRotate(180f)
-        8 -> matrix.postRotate(270f)
+        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
     }
     return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }

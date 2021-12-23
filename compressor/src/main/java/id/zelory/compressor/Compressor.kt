@@ -1,6 +1,8 @@
 package id.zelory.compressor
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import id.zelory.compressor.constraint.Compression
 import id.zelory.compressor.constraint.default
 import kotlinx.coroutines.Dispatchers
@@ -29,5 +31,86 @@ object Compressor {
             }
         }
         return@withContext result
+    }
+
+    fun compress(
+            context: Context,
+            imageFile: File,
+            compressionPatch: Compression.() -> Unit = { default() }
+    ): File {
+        val compression = Compression().apply(compressionPatch)
+        var result = copyToCache(context, imageFile)
+        compression.constraints.forEach { constraint ->
+            while (constraint.isSatisfied(result).not()) {
+                result = constraint.satisfy(result)
+            }
+        }
+        return result
+    }
+
+    suspend fun compress(
+            context: Context,
+            bitmap: Bitmap,
+            coroutineContext: CoroutineContext = Dispatchers.IO,
+            compressionPatch: Compression.() -> Unit = { default() }
+    ): File = withContext(coroutineContext) {
+        var result = createFile(context)
+        saveBitmap(bitmap, result)
+        val compression = Compression().apply(compressionPatch)
+        compression.constraints.forEach { constraint ->
+            while (constraint.isSatisfied(result).not()) {
+                result = constraint.satisfy(result)
+            }
+        }
+        return@withContext result
+    }
+
+    fun compress(
+            context: Context,
+            bitmap: Bitmap,
+            compressionPatch: Compression.() -> Unit = { default() }
+    ): File {
+        var result = createFile(context)
+        saveBitmap(bitmap, result)
+        val compression = Compression().apply(compressionPatch)
+        compression.constraints.forEach { constraint ->
+            while (constraint.isSatisfied(result).not()) {
+                result = constraint.satisfy(result)
+            }
+        }
+        return result
+    }
+
+    suspend fun compressBitmap(
+            context: Context,
+            bitmap: Bitmap,
+            coroutineContext: CoroutineContext = Dispatchers.IO,
+            compressionPatch: Compression.() -> Unit = { default() }
+    ): Bitmap = withContext(coroutineContext) {
+        var result = createFile(context)
+        saveBitmap(bitmap, result)
+        val compression = Compression().apply(compressionPatch)
+        compression.constraints.forEach { constraint ->
+            while (constraint.isSatisfied(result).not()) {
+                result = constraint.satisfy(result)
+            }
+        }
+        return@withContext BitmapFactory.decodeFile(result.absolutePath)
+    }
+
+    fun compressBitmap(
+            context: Context,
+            bitmap: Bitmap,
+            compressionPatch: Compression.() -> Unit = { default() }
+    ): Bitmap {
+        var result = createFile(context)
+        saveBitmap(bitmap, result)
+        val compression = Compression().apply(compressionPatch)
+        compression.constraints.forEach { constraint ->
+            while (constraint.isSatisfied(result).not()) {
+                result = constraint.satisfy(result)
+            }
+        }
+        return BitmapFactory.decodeFile(result.absolutePath)
     }
 }
