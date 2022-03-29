@@ -38,6 +38,10 @@ fun createFile(context: Context): File {
     return File(cachePath(context), "IMG_".createFileName("jpg"))
 }
 
+fun createCacheFile(oriFile: File, context: Context): File {
+    return File(cachePath(context), oriFile.name)
+}
+
 fun File.compressFormat() = when (extension.toLowerCase()) {
     "png" -> Bitmap.CompressFormat.PNG
     "webp" -> Bitmap.CompressFormat.WEBP
@@ -99,10 +103,20 @@ fun determineImageRotation(imageFile: File, bitmap: Bitmap): Bitmap {
 }
 
 internal fun copyToCache(context: Context, imageFile: File): File {
-    return imageFile.copyTo(File("${cachePath(context)}${imageFile.name}"), true)
+    val cacheFile = createCacheFile(imageFile, context)
+    //如果原始文件和生成的缓存文件是同一个路径名称，则不需要拷贝
+    if (imageFile.absolutePath == cacheFile.absolutePath) {
+        return cacheFile
+    }
+    return imageFile.copyTo(cacheFile, true)
 }
 
-fun overWrite(imageFile: File, bitmap: Bitmap, format: Bitmap.CompressFormat = imageFile.compressFormat(), quality: Int = 100): File {
+fun overWrite(
+    imageFile: File,
+    bitmap: Bitmap,
+    format: Bitmap.CompressFormat = imageFile.compressFormat(),
+    quality: Int = 100
+): File {
     val result = if (format == imageFile.compressFormat()) {
         imageFile
     } else {
@@ -113,7 +127,12 @@ fun overWrite(imageFile: File, bitmap: Bitmap, format: Bitmap.CompressFormat = i
     return result
 }
 
-fun saveBitmap(bitmap: Bitmap, destination: File, format: Bitmap.CompressFormat = destination.compressFormat(), quality: Int = 100) {
+fun saveBitmap(
+    bitmap: Bitmap,
+    destination: File,
+    format: Bitmap.CompressFormat = destination.compressFormat(),
+    quality: Int = 100
+) {
     destination.parentFile?.mkdirs()
     var fileOutputStream: FileOutputStream? = null
     try {
